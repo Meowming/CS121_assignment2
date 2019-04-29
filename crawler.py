@@ -3,6 +3,9 @@ import re
 from urllib.parse import urlparse
 from corpus import Corpus
 
+#html parser
+from html.parser import HTMLParser
+
 logger = logging.getLogger(__name__)
 
 class Crawler:
@@ -38,11 +41,19 @@ class Crawler:
         :return: a dictionary containing the url, content and the size of the content. If the url does not
         exist in the corpus, a dictionary with content set to None and size set to 0 can be returned.
         """
+        path = self.corpus.get_file_name(url)
+        #print(path)
+        ###TODO: catch exception
+        file = open(path,"r",encoding='utf-8')
+        content = file.read();
+
         url_data = {
             "url": url,
-            "content": None,
-            "size": 0
+            "content": content,
+            "size": len(content)
         }
+        ###wired bug: if I try to print url data itself, seem more than one objec will be printed
+        #print(url_data["size"])
         return url_data
 
     def extract_next_links(self, url_data):
@@ -56,6 +67,15 @@ class Crawler:
         Suggested library: lxml
         """
         outputLinks = []
+        outputLinks = re.findall('href=".*"', url_data["content"])
+        for i in range(len(outputLinks)):
+            outputLinks[i] = outputLinks[i][6:-1]
+        '''
+        for link in outputLinks:
+            link = link[6:-1]
+            #print(link)
+        '''
+        
         return outputLinks
 
     def is_valid(self, url):
@@ -68,6 +88,7 @@ class Crawler:
         if parsed.scheme not in set(["http", "https"]):
             return False
         try:
+            '''
             return ".ics.uci.edu" in parsed.hostname \
                    and not re.match(".*\.(css|js|bmp|gif|jpe?g|ico" + "|png|tiff?|mid|mp2|mp3|mp4" \
                                     + "|wav|avi|mov|mpeg|ram|m4v|mkv|ogg|ogv|pdf" \
@@ -75,6 +96,8 @@ class Crawler:
                                     + "|thmx|mso|arff|rtf|jar|csv" \
                                     + "|rm|smil|wmv|swf|wma|zip|rar|gz|pdf)$", parsed.path.lower())
 
+            '''
+            return True
         except TypeError:
             print("TypeError for ", parsed)
             return False
